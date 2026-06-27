@@ -54,4 +54,25 @@ public class DoctorController {
     public Appointment updateAppointment(@PathVariable Long id, @RequestBody Appointment appointment) {
         return appointmentService.updateAppointment(id, appointment);
     }
+    @PutMapping("/profile")
+    public DoctorResponseDTO updateProfile(@RequestBody Doctor updatedDoctor) {
+        String email = SecurityContextHolder.getContext().getAuthentication().getName();
+        User user = userRepository.findByEmail(email);
+        Doctor doctor = doctorRepository.findByUserId(user.getId());
+
+        doctor.setSpecialization(updatedDoctor.getSpecialization());
+        doctor.setExperience(updatedDoctor.getExperience());
+        doctor.setPhone(updatedDoctor.getPhone());
+
+        Doctor saved = doctorRepository.save(doctor);
+
+        return new DoctorResponseDTO(
+            saved.getId(),
+            user.getName(),
+            user.getEmail(),
+            saved.getSpecialization(),
+            saved.getExperience(),
+            saved.getPhone()
+        );
+    }
 }

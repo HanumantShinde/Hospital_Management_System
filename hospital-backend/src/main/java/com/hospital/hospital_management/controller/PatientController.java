@@ -72,4 +72,28 @@ public class PatientController {
                         a.getNotes()))
                 .collect(Collectors.toList());
     }
+    
+    @PutMapping("/profile")
+    public PatientResponseDTO updateProfile(@RequestBody Patient updatedPatient) {
+        String email = SecurityContextHolder.getContext().getAuthentication().getName();
+        User user = userRepository.findByEmail(email);
+        Patient patient = patientRepository.findByUserId(user.getId());
+
+        patient.setAge(updatedPatient.getAge());
+        patient.setBloodGroup(updatedPatient.getBloodGroup());
+        patient.setPhone(updatedPatient.getPhone());
+        patient.setAddress(updatedPatient.getAddress());
+
+        Patient saved = patientRepository.save(patient);
+
+        return new PatientResponseDTO(
+            saved.getId(),
+            user.getName(),
+            user.getEmail(),
+            saved.getAge(),
+            saved.getBloodGroup(),
+            saved.getPhone(),
+            saved.getAddress()
+        );
+    }
 }
