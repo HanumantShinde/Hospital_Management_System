@@ -1,297 +1,239 @@
 # 🏥 Hospital Management System (HMS)
 
-A role-based **Hospital Management System** built using **Spring Boot 3**, **Java 21**, and **MySQL**. This project provides a RESTful backend API for managing doctors, patients, and appointments with secure JWT-based authentication and authorization.
+A full-stack Hospital Management System built with **Spring Boot 3**, **Angular 19**, and **MySQL**. Features role-based access control with three distinct user roles — Admin, Doctor, and Patient — each with their own secured dashboard and functionality.
 
 ---
 
 ## 🚀 Tech Stack
 
-### Backend
-
-* Java 21
-* Spring Boot 3
-* Spring Data JPA
-* Spring Security
-* JWT Authentication
-* Maven
-
-### Database
-
-* MySQL
-
-### Additional Libraries
-
-* Lombok
-* Bean Validation
-* JJWT (Java JWT)
+| Layer | Technology |
+|-------|-----------|
+| Backend | Spring Boot 3, Java 21 |
+| Frontend | Angular 19, Bootstrap 5 |
+| Database | MySQL 8 |
+| Authentication | JWT (JSON Web Tokens) |
+| Security | Spring Security, BCrypt |
+| ORM | JPA / Hibernate |
+| Build Tool | Maven |
 
 ---
 
-## 📌 Features
+## ✨ Features
 
-The system supports three user roles:
+### 🔐 Security
+- Stateless JWT authentication — token carries email and role, no server-side sessions
+- BCrypt password encryption — plain text passwords never stored in database
+- Role-based access control enforced at both API level (Spring Security) and UI level (Angular Guards)
+- JWT filter intercepts every request before it reaches any controller
+- Public registration endpoint force-sets role to PATIENT — no user can self-assign ADMIN or DOCTOR role
 
-### 👨‍💼 Admin
+### 👨‍💼 Admin Dashboard
+- View total doctors and patients with live count cards
+- Add new doctors and patients directly from dashboard
+- Delete doctors and patients with confirmation dialog
+- Instant UI update on delete — no page refresh needed
 
-* View all users
-* View all doctors
-* View all patients
-* Add new doctors
-* Add new patients
-* Delete doctors
-* Delete patients
+### 👨‍⚕️ Doctor Dashboard
+- View all assigned appointments with color-coded status badges
+- Update appointment status (PENDING → CONFIRMED → COMPLETED → CANCELLED)
+- Add clinical notes to appointments
+- Edit own profile — specialization, experience, phone
 
-### 🧑‍⚕️ Doctor
-
-* View own profile
-* View assigned appointments
-* Update appointment details
-* Change appointment status
-* Add notes to appointments
-
-### 🧑 Patient
-
-* View own profile
-* Browse available doctors
-* Book appointments
-* View appointment history
-
----
-
-## 🗄️ Database Entities
-
-### User
-
-Stores authentication and role information.
-
-| Field    | Description              |
-| -------- | ------------------------ |
-| id       | Unique identifier        |
-| name     | User name                |
-| email    | User email               |
-| password | Encrypted password       |
-| role     | ADMIN / DOCTOR / PATIENT |
-
-### Patient
-
-Additional information for patients.
-
-| Field      | Description             |
-| ---------- | ----------------------- |
-| id         | Unique identifier       |
-| age        | Patient age             |
-| bloodGroup | Blood group             |
-| phone      | Contact number          |
-| address    | Residential address     |
-| user       | Associated user account |
-
-### Doctor
-
-Additional information for doctors.
-
-| Field          | Description             |
-| -------------- | ----------------------- |
-| id             | Unique identifier       |
-| specialization | Medical specialization  |
-| experience     | Years of experience     |
-| phone          | Contact number          |
-| user           | Associated user account |
-
-### Appointment
-
-Manages doctor-patient appointments.
-
-| Field               | Description        |
-| ------------------- | ------------------ |
-| id                  | Appointment ID     |
-| patient             | Linked patient     |
-| doctor              | Linked doctor      |
-| appointmentDateTime | Date and time      |
-| status              | Appointment status |
-| notes               | Additional notes   |
+### 🧑‍⚕️ Patient Dashboard
+- Self-register and login independently
+- Browse available doctors with specialization details
+- Book appointments with date, time, and symptom notes
+- View own appointment history with real-time status updates
+- Edit own profile — age, blood group, phone, address
 
 ---
 
-## 🔐 Authentication & Authorization
+## 🏗️ Architecture
 
-The application uses:
-
-* Spring Security
-* JWT (JSON Web Token)
-* Role-Based Access Control (RBAC)
-
-### Supported Roles
-
-* ADMIN
-* DOCTOR
-* PATIENT
-
-After successful login, users receive a JWT token which must be included in subsequent API requests.
-
----
-
-## 📂 Project Structure
-
-```text
-src/main/java
-│
-├── controller
-│   ├── AuthController
-│   ├── AdminController
-│   ├── DoctorController
-│   └── PatientController
-│
-├── service
-│
-├── repository
-│
-├── dto
-│
-├── entity
-│   ├── User
-│   ├── Doctor
-│   ├── Patient
-│   └── Appointment
-│
-├── security
-│
-└── config
+```
+Angular Frontend (port 4200)
+        ↓
+HTTP Request + JWT Token in Authorization header
+        ↓
+JwtAuthFilter — validates token, extracts email + role, stores in SecurityContext
+        ↓
+SecurityConfig — checks if role is allowed to access this URL
+        ↓
+Controller Layer — receives request, calls service
+        ↓
+Service Layer — business logic (BCrypt, role assignment, identity from SecurityContext)
+        ↓
+Repository Layer — Spring Data JPA queries to MySQL
+        ↓
+MySQL Database
+        ↓
+Response flows back up through Service → DTO (strips sensitive fields) → Controller → Angular
 ```
 
 ---
 
-## 🔗 API Modules
+## 📁 Project Structure
 
-### Authentication APIs
-
-```http
-POST /api/auth/register
-POST /api/auth/login
+```
+Hospital_Management_System/
+├── hospital-backend/
+│   └── src/main/java/com/hospital/hospital_management/
+│       ├── config/
+│       │   └── SecurityConfig.java          # Spring Security + CORS configuration
+│       ├── controller/
+│       │   ├── AuthController.java          # Login and registration endpoints
+│       │   ├── AdminController.java         # Admin-only endpoints
+│       │   ├── DoctorController.java        # Doctor-only endpoints
+│       │   └── PatientController.java       # Patient-only endpoints
+│       ├── service/
+│       │   ├── AuthService.java             # Registration, login, BCrypt logic
+│       │   └── AppointmentService.java      # Appointment business logic
+│       ├── repository/
+│       │   ├── UserRepository.java
+│       │   ├── DoctorRepository.java
+│       │   ├── PatientRepository.java
+│       │   └── AppointmentRepository.java
+│       ├── model/
+│       │   ├── User.java
+│       │   ├── Doctor.java
+│       │   ├── Patient.java
+│       │   ├── Appointment.java
+│       │   ├── Role.java                    # Enum: ADMIN, DOCTOR, PATIENT
+│       │   └── AppointmentStatus.java       # Enum: PENDING, CONFIRMED, COMPLETED, CANCELLED
+│       ├── dto/
+│       │   ├── UserResponseDTO.java         # Strips password from user responses
+│       │   ├── DoctorResponseDTO.java       # Flattened doctor + user data
+│       │   ├── PatientResponseDTO.java      # Flattened patient + user data
+│       │   └── AppointmentResponseDTO.java  # Clean appointment response
+│       └── security/
+│           ├── JwtUtil.java                 # Token generation and validation
+│           └── JwtAuthFilter.java           # Request interceptor
+│
+└── hospital-frontend/
+    └── src/app/
+        ├── components/
+        │   ├── login/                       # Login page
+        │   ├── register/                    # Patient self-registration
+        │   ├── admin/                       # Admin dashboard
+        │   ├── doctor/                      # Doctor dashboard
+        │   ├── patient/                     # Patient dashboard
+        │   └── unauthorized/               # Access denied page
+        ├── services/
+        │   └── auth.service.ts              # Login, register, token storage
+        ├── models/                          # TypeScript interfaces matching backend DTOs
+        ├── guards/
+        │   └── auth.guard.ts               # Route protection by role
+        └── interceptors/
+            └── auth.interceptor.ts          # Auto-attaches JWT to every HTTP request
 ```
 
-### Admin APIs
+---
 
-```http
-GET    /api/admin/users
-GET    /api/admin/doctors
-GET    /api/admin/patients
-DELETE /api/admin/doctors/{id}
-DELETE /api/admin/patients/{id}
-```
+## 🔌 API Endpoints
 
-### Patient APIs
+### Auth (Public)
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| POST | `/api/auth/login` | Login — returns JWT token and role |
+| POST | `/api/auth/register` | Patient self-registration |
 
-```http
-GET  /api/patient/profile
-GET  /api/patient/doctors
-POST /api/patient/appointments
-GET  /api/patient/appointments
-```
+### Admin (ADMIN role only)
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| GET | `/api/admin/users` | Get all users |
+| GET | `/api/admin/doctors` | Get all doctors |
+| POST | `/api/admin/doctors` | Add new doctor |
+| DELETE | `/api/admin/doctors/{id}` | Delete doctor |
+| GET | `/api/admin/patients` | Get all patients |
+| POST | `/api/admin/patients` | Add new patient |
+| DELETE | `/api/admin/patients/{id}` | Delete patient |
 
-### Doctor APIs
+### Doctor (DOCTOR role only)
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| GET | `/api/doctor/profile` | Get own profile |
+| PUT | `/api/doctor/profile` | Update own profile |
+| GET | `/api/doctor/appointments` | Get own appointments |
+| PUT | `/api/doctor/appointments/{id}` | Update appointment status and notes |
 
-```http
-GET  /api/doctor/profile
-GET  /api/doctor/appointments
-PUT  /api/doctor/appointments/{id}
-```
+### Patient (PATIENT role only)
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| GET | `/api/patient/profile` | Get own profile |
+| PUT | `/api/patient/profile` | Update own profile |
+| GET | `/api/patient/doctors` | Browse available doctors |
+| POST | `/api/patient/appointments` | Book appointment |
+| GET | `/api/patient/appointments` | View own appointments |
 
 ---
 
 ## ⚙️ Setup & Installation
 
-### 1. Clone the Repository
+### Prerequisites
+- Java 21+
+- Node.js 18+
+- MySQL 8+
+- Maven
+
+### Backend Setup
 
 ```bash
-git clone https://github.com/your-username/Hospital_Management_System.git
-cd Hospital_Management_System
-```
+cd hospital-backend
 
-### 2. Configure MySQL
-
-Create a database:
-
-```sql
-CREATE DATABASE hospital_management;
-```
-
-### 3. Update application.properties
-
-```properties
-spring.datasource.url=jdbc:mysql://localhost:3306/hospital_management
-spring.datasource.username=root
+# Configure MySQL in application.properties
+spring.datasource.url=jdbc:mysql://localhost:3306/hospital_db
+spring.datasource.username=your_username
 spring.datasource.password=your_password
-
 spring.jpa.hibernate.ddl-auto=update
-spring.jpa.show-sql=true
-```
 
-### 4. Build the Project
-
-```bash
-mvn clean install
-```
-
-### 5. Run the Application
-
-```bash
+# Run
 mvn spring-boot:run
 ```
 
-Application will start on:
+Backend runs on `http://localhost:8080`
 
-```text
-http://localhost:8080
+### Frontend Setup
+
+```bash
+cd hospital-frontend
+npm install
+ng serve
+```
+
+Frontend runs on `http://localhost:4200`
+
+---
+
+## 🔐 Authentication Flow
+
+```
+1. POST /api/auth/login  →  { email, password }
+2. BCrypt validates password against stored hash
+3. JWT token generated with email + role embedded inside
+4. Token returned to Angular — saved in localStorage
+5. Every subsequent request:
+   Angular Interceptor attaches → Authorization: Bearer <token>
+   JwtAuthFilter validates token → extracts email + role
+   SecurityConfig checks role permission for URL
+   Controller retrieves identity from SecurityContext
 ```
 
 ---
 
-## 🧪 Testing APIs
+## 🛡️ Security Design Decisions
 
-You can test APIs using:
+**Why BCrypt?** Plain text passwords never stored — even if database is compromised, passwords cannot be reversed from hashes.
 
-* Postman
-* Swagger (if configured)
-* Insomnia
+**Why JWT stateless?** Server stores no session data — every request is self-contained with identity proof inside the token. Scales horizontally without shared session storage.
 
----
+**Why role embedded in token?** Eliminates database lookup on every request to check the user's role — filter extracts it directly from the token in memory.
 
-## 🎯 Learning Objectives
+**Why SecurityContext for identity?** Controllers never trust client-supplied identity — they extract who the logged-in user is from the verified token via SecurityContext. A patient cannot claim to be a different patient by changing a request parameter.
 
-This project demonstrates:
-
-* REST API Development
-* Spring Boot Fundamentals
-* Spring Security
-* JWT Authentication
-* Role-Based Authorization
-* JPA & Hibernate
-* MySQL Integration
-* Layered Architecture
-* DTO Pattern
+**Why DTOs?** Raw JPA entities contain BCrypt password hashes — DTOs strip sensitive fields before any data leaves the backend, regardless of which endpoint is called.
 
 ---
 
-## 🔮 Future Enhancements
+## 🧑‍💻 Built By
 
-* Frontend using Angular
-* Appointment reminders
-* Prescription management
-* Medical records upload
-* Email notifications
-* Dashboard analytics
-* Doctor availability scheduling
-
----
-
-## 👨‍💻 Author
-
-**Hanumant Shinde**
-
-Computer Engineering Student | Java Backend Developer
-
----
-
-## 📄 License
-
-This project is developed for educational and learning purposes.
+[Hanumant Shinde](https://github.com/HanumantShinde) — Full Stack Java Developer
