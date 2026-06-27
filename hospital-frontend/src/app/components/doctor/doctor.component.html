@@ -1,0 +1,147 @@
+<div class="container-fluid py-4 bg-light min-vh-100">
+  <div class="container">
+
+    <!-- Header -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+      <div>
+        <h2 class="fw-bold text-primary mb-0">👨‍⚕️ Doctor Dashboard</h2>
+        <p class="text-muted mb-0">Welcome, Dr. {{ profile.name }}</p>
+      </div>
+      <button class="btn btn-danger" (click)="logout()">Logout</button>
+    </div>
+
+    <!-- Tabs -->
+    <ul class="nav nav-tabs mb-4">
+      <li class="nav-item">
+        <button class="nav-link" [class.active]="activeTab === 'appointments'"
+          (click)="activeTab = 'appointments'">📅 Appointments</button>
+      </li>
+      <li class="nav-item">
+        <button class="nav-link" [class.active]="activeTab === 'profile'"
+          (click)="activeTab = 'profile'">👤 My Profile</button>
+      </li>
+    </ul>
+
+    <!-- APPOINTMENTS TAB -->
+    <div *ngIf="activeTab === 'appointments'">
+      <div class="card shadow-sm">
+        <div class="card-header bg-white">
+          <h5 class="mb-0 fw-semibold">My Appointments</h5>
+        </div>
+        <div class="card-body p-0">
+          <div class="table-responsive">
+            <table class="table table-hover mb-0">
+              <thead class="table-light">
+                <tr>
+                  <th>#</th>
+                  <th>Patient</th>
+                  <th>Date & Time</th>
+                  <th>Status</th>
+                  <th>Notes</th>
+                  <th>Action</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr *ngFor="let appointment of appointments">
+                  <td>{{ appointment.id }}</td>
+                  <td>{{ appointment.patientName }}</td>
+                  <td>{{ appointment.appointmentDate | date:'medium' }}</td>
+                  <td>
+                    <span class="badge"
+                      [class.bg-warning]="appointment.status === 'PENDING'"
+                      [class.bg-success]="appointment.status === 'CONFIRMED'"
+                      [class.bg-primary]="appointment.status === 'COMPLETED'"
+                      [class.bg-danger]="appointment.status === 'CANCELLED'">
+                      {{ appointment.status }}
+                    </span>
+                  </td>
+                  <td>{{ appointment.notes || 'No notes' }}</td>
+                  <td>
+                    <button class="btn btn-sm btn-outline-primary"
+                      (click)="selectAppointment(appointment)">Update</button>
+                  </td>
+                </tr>
+                <tr *ngIf="appointments.length === 0">
+                  <td colspan="6" class="text-center text-muted py-4">No appointments yet</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- Update Form -->
+      <div class="card shadow-sm mt-4" *ngIf="selectedAppointment">
+        <div class="card-header bg-white">
+          <h5 class="mb-0 fw-semibold">Update Appointment #{{ selectedAppointment.id }}</h5>
+        </div>
+        <div class="card-body">
+          <div class="row">
+            <div class="col-md-6 mb-3">
+              <label class="form-label fw-semibold">Status</label>
+              <select class="form-select" [(ngModel)]="updatedStatus">
+                <option value="PENDING">PENDING</option>
+                <option value="CONFIRMED">CONFIRMED</option>
+                <option value="COMPLETED">COMPLETED</option>
+                <option value="CANCELLED">CANCELLED</option>
+              </select>
+            </div>
+            <div class="col-md-6 mb-3">
+              <label class="form-label fw-semibold">Notes</label>
+              <textarea class="form-control" [(ngModel)]="updatedNotes" rows="3"
+                placeholder="Add clinical notes..."></textarea>
+            </div>
+          </div>
+          <button class="btn btn-success me-2" (click)="updateAppointment()">Save Changes</button>
+          <button class="btn btn-secondary" (click)="selectedAppointment = null">Cancel</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- PROFILE TAB -->
+    <div *ngIf="activeTab === 'profile'">
+      <div class="card shadow-sm">
+        <div class="card-header bg-white d-flex justify-content-between align-items-center">
+          <h5 class="mb-0 fw-semibold">My Profile</h5>
+          <button class="btn btn-outline-primary btn-sm" (click)="editingProfile = !editingProfile">
+            {{ editingProfile ? 'Cancel' : 'Edit Profile' }}
+          </button>
+        </div>
+        <div class="card-body">
+
+          <div *ngIf="profileSuccess" class="alert alert-success">{{ profileSuccess }}</div>
+
+          <div class="row">
+            <div class="col-md-6 mb-3">
+              <label class="form-label fw-semibold">Full Name</label>
+              <input type="text" class="form-control" [value]="profile.name" disabled />
+            </div>
+            <div class="col-md-6 mb-3">
+              <label class="form-label fw-semibold">Email</label>
+              <input type="email" class="form-control" [value]="profile.email" disabled />
+            </div>
+            <div class="col-md-6 mb-3">
+              <label class="form-label fw-semibold">Specialization</label>
+              <input type="text" class="form-control" [(ngModel)]="profile.specialization"
+                [disabled]="!editingProfile" placeholder="e.g. Cardiology" />
+            </div>
+            <div class="col-md-6 mb-3">
+              <label class="form-label fw-semibold">Experience (years)</label>
+              <input type="number" class="form-control" [(ngModel)]="profile.experience"
+                [disabled]="!editingProfile" placeholder="Years of experience" />
+            </div>
+            <div class="col-md-6 mb-3">
+              <label class="form-label fw-semibold">Phone</label>
+              <input type="text" class="form-control" [(ngModel)]="profile.phone"
+                [disabled]="!editingProfile" placeholder="Contact number" />
+            </div>
+          </div>
+
+          <button *ngIf="editingProfile" class="btn btn-success"
+            (click)="updateProfile()">Save Profile</button>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
